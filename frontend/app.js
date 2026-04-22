@@ -14,7 +14,9 @@
 'use strict';
 
 // ─── Configuração ────────────────────────────────────────────
-const API_BASE = "https://erp-automation-system.onrender.com";
+const API_BASE = window.location.hostname.includes('localhost')
+  ? 'http://localhost:3000'
+  : 'https://erp-automation-system.onrender.com';
 
 // Cache local dos pedidos para filtros sem nova requisição
 let pedidosCache = [];
