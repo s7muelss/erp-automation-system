@@ -14,7 +14,7 @@
 'use strict';
 
 // ─── Configuração ────────────────────────────────────────────
-const API_BASE = 'http://localhost:3000';
+const API = "https://erp-automation-system.onrender.com";
 
 // Cache local dos pedidos para filtros sem nova requisição
 let pedidosCache = [];
@@ -507,5 +507,3 @@ document.addEventListener('DOMContentLoaded', () => {
   // Auto-refresh a cada 30 segundos (simula ambiente real)
   setInterval(() => carregarPedidos(), 30000);
 });
-
-const API = "https://erp-automation-system.onrender.com";
