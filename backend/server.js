@@ -15,7 +15,6 @@ const { URL } = require('url');
 
 const PORT = process.env.PORT || 3000;
 const DB_FILE  = path.join(__dirname, 'erp-data.json');
-const FRONTEND = path.join(__dirname, 'frontend');
 
 // ─── Banco de Dados (JSON) ────────────────────────────────────
 function carregarDB() {
@@ -217,17 +216,6 @@ const server = http.createServer(async (req, res) => {
     const db   = carregarDB();
     const logs = db.workflow_logs.filter(l => l.pedido_id === id).sort((a, b) => new Date(a.executado_em) - new Date(b.executado_em));
     return jsonResponse(res, 200, { sucesso: true, total: logs.length, dados: logs });
-  }
-
-  // Servir arquivos estáticos do frontend
-  if (method === 'GET') {
-    const staticMap = {
-      '/': path.join(FRONTEND, 'index.html'),
-      '/index.html': path.join(FRONTEND, 'index.html'),
-      '/style.css': path.join(FRONTEND, 'style.css'),
-      '/app.js': path.join(FRONTEND, 'app.js'),
-    };
-    if (staticMap[pathname]) return serveStatic(res, staticMap[pathname]);
   }
 
   res.writeHead(404, { 'Content-Type': 'text/plain' });
