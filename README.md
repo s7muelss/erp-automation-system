@@ -1,192 +1,202 @@
 # ERP Automation System
 
-## 🔍 Diagnóstico dos Problemas (e Correções Aplicadas)
-
-### Problema 1 — Render retorna 404 na raiz "/"
-**Causa raiz:** O servidor Node puro não tinha handler para `/`.  
-Qualquer requisição que não batesse explicitamente em `/pedidos` caia em erro.
-
-**Correção:** Adicionado roteamento completo:
-- Rotas de API sob `/api/*`
-- Fallback estático com `serveStatic()` para todo o resto
-- Fallback SPA: serve `index.html` para qualquer rota desconhecida
+> Sistema completo de automação de pedidos com backend em Node.js puro, pipeline de workflow inteligente, logs de auditoria e arquitetura distribuída (Vercel + Render).
 
 ---
 
-### Problema 2 — `HOST = 'localhost'` no Render
-**Causa raiz:** `server.listen(PORT, 'localhost')` no Render significa que o servidor só
-escuta em loopback interno — o proxy externo do Render não consegue alcançar o processo.
+## 👨‍💻 Autor
 
-**Correção:**
-```js
-// ❌ ERRADO
-server.listen(PORT, 'localhost', ...)
+**Samuel Alves de Sousa**
 
-// ✅ CORRETO
-const HOST = '0.0.0.0';
-server.listen(PORT, HOST, ...)
-```
+Projeto desenvolvido com foco em engenharia de software, automação de processos e simulação de sistemas corporativos reais (ERP/SaaS).
 
 ---
 
-### Problema 3 — PORT hardcoded
-**Causa raiz:** Render injeta `process.env.PORT` dinamicamente. Se o código usa porta
-fixa (ex: 3000), o servidor sobe em porta errada e o Render não consegue fazer proxy.
+## 📌 Visão do Projeto
 
-**Correção:**
-```js
-const PORT = process.env.PORT || 3000;
-```
+O **ERP Automation System** simula um ambiente real de ERP corporativo, com foco em:
 
----
-
-### Problema 4 — Paths com `__dirname` quebrando no Render
-**Causa raiz:** Caminhos relativos como `./data/pedidos.json` funcionam em dev mas
-quebram quando o working directory muda no Render.
-
-**Correção:** Usar sempre `path.join(__dirname, ...)`:
-```js
-const DATA_FILE = path.join(__dirname, 'data', 'pedidos.json');
-```
+- Automação de processos internos (workflow engine)
+- Controle de pedidos em tempo real
+- Registro completo de auditoria (audit log)
+- Integração frontend + backend desacoplado
+- Arquitetura pronta para escalabilidade (SaaS)
 
 ---
 
-### Problema 5 — Falta de CORS
-**Causa raiz:** Sem headers CORS, o browser bloqueia requisições do Vercel para o Render.
+## ⚙️ Arquitetura do Sistema
 
-**Correção:** Headers adicionados em **toda** resposta, incluindo preflight OPTIONS:
-```js
-res.setHeader('Access-Control-Allow-Origin', FRONTEND_ORIGIN);
-res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-```
 
----
+Frontend (Vercel)
+↓
+API REST (Render - Node.js puro)
+↓
+Persistência local (JSON - simulação de banco)
+↓
+Workflow Engine (automação de processos internos)
 
-### Problema 6 — rootDir incorreto no Render
-**Causa raiz:** Se o `rootDir` no dashboard do Render aponta para a raiz do repositório
-mas o `package.json` está em `backend/`, o `startCommand: node server.js` falha.
-
-**Correção:** `render.yaml` com `rootDir: backend`.
 
 ---
 
-### Problema 7 — URL da API hardcoded no frontend
-**Causa raiz:** URL de API usando `localhost` em produção ou URL errada do Render.
+## 🚀 Funcionalidades
 
-**Correção:** Detecção automática de ambiente no `app.js`:
-- Vercel → aponta para `https://erp-automation-system.onrender.com/api`
-- Mesmo servidor → usa `window.location.origin + /api`
-- Localhost → `http://localhost:3000/api`
-
----
-
-## 📁 Estrutura do Projeto
-
-```
-erp-automation-system/
-├── render.yaml              ← config automática do Render
-├── .gitignore
-├── backend/
-│   ├── server.js            ← servidor Node puro (CORRIGIDO)
-│   ├── package.json         ← scripts corretos
-│   └── data/
-│       └── pedidos.json     ← criado automaticamente
-└── frontend/
-    ├── index.html
-    ├── app.js
-    ├── style.css
-    └── vercel.json          ← config SPA do Vercel
-```
+### 📦 Gestão de Pedidos
+- Criar pedidos via interface ou API
+- Atualizar status em tempo real
+- Consulta completa de histórico
 
 ---
 
-## 🚀 Deploy — Passo a Passo
+### 🔄 Motor de Workflow (Core do sistema)
 
-### Backend no Render
+Cada pedido passa automaticamente por um pipeline de automação:
 
-1. Acesse [render.com](https://render.com) → "New Web Service"
-2. Conecte seu repositório GitHub
-3. Configure:
-   - **Name:** `erp-automation-system`
-   - **Root Directory:** `backend`  ← **CRÍTICO**
-   - **Build Command:** _(deixar em branco ou `echo ok`)_
-   - **Start Command:** `node server.js`
-   - **Environment:** Node
-4. Em "Environment Variables", adicione:
-   - `NODE_ENV` = `production`
-   - `FRONTEND_ORIGIN` = `https://seu-projeto.vercel.app`
-5. Clique em "Create Web Service"
-6. Aguarde o deploy e acesse: `https://erp-automation-system.onrender.com/api/health`
-
-> **Alternativa:** Use o `render.yaml` na raiz do repo para configuração automática.
+- Registro de criação do pedido
+- Cálculo automático de prioridade:
+  - Normal
+  - Alta
+  - Crítica
+- Transição automática de status
+- Registro de logs (audit trail)
+- Simulação de webhook externo
+- Alertas para pedidos críticos
 
 ---
 
-### Frontend no Vercel
+### 📊 Sistema de Auditoria (Logs)
 
-1. Acesse [vercel.com](https://vercel.com) → "New Project"
-2. Conecte o repositório
-3. Configure:
-   - **Root Directory:** `frontend`  ← **CRÍTICO**
-   - **Framework Preset:** Other
-   - Build/Output: _(deixar padrão)_
-4. Deploy → Vercel detecta `vercel.json` automaticamente
+Cada ação no sistema gera um log estruturado:
 
----
+- Evento executado
+- Data e hora
+- Dados anteriores e novos
+- ID do pedido relacionado
 
-### Atualizar URL da API no Frontend
-
-Se a URL do seu Render for diferente, edite `frontend/app.js`:
-```js
-// Linha ~10 — troque pela sua URL real:
-return "https://SEU-PROJETO.onrender.com/api";
-```
-
-Ou injete via variável de ambiente no Vercel:
-1. Vercel → Settings → Environment Variables
-2. Adicione: `NEXT_PUBLIC_API_URL` = `https://seu.onrender.com/api`
-3. No `index.html`, antes de carregar `app.js`:
-   ```html
-   <script>window.ENV_API_URL = "https://seu.onrender.com/api";</script>
-   ```
+> Simula sistemas reais como SAP, TOTVS e ERPs corporativos.
 
 ---
 
-## 🔗 Endpoints da API
+### 🌐 Frontend Inteligente
 
-| Método | Rota                     | Descrição                        |
-|--------|--------------------------|----------------------------------|
-| GET    | `/api/health`            | Health check (monitoramento)     |
-| GET    | `/api/pedidos`           | Lista pedidos (filtros opcionais)|
-| POST   | `/api/pedidos`           | Cria novo pedido                 |
-| GET    | `/api/pedidos/:id`       | Busca pedido por ID              |
-| PUT    | `/api/pedidos/:id`       | Atualiza pedido / status         |
-| GET    | `/api/pedidos/:id/logs`  | Histórico de logs do pedido      |
-
-### Filtros disponíveis (GET /api/pedidos):
-- `?status=pendente|em_andamento|concluido|cancelado`
-- `?cliente=nome`
-
-### Workflow de Status:
-```
-pendente → em_andamento → concluido
-pendente → cancelado
-em_andamento → cancelado
-```
+- Interface responsiva
+- Atualização dinâmica sem reload
+- Filtros por status e prioridade
+- Busca de pedidos em tempo real
+- Preview de prioridade ao digitar valor
+- Integração com ViaCEP (autopreenchimento de endereço)
 
 ---
 
-## 🧪 Teste rápido da API
+## 🧠 Decisões Técnicas
 
+### ✔ Backend sem frameworks
+Uso de Node.js puro (`http` nativo) para demonstrar:
+- Controle total de requisições HTTP
+- Baixa dependência de bibliotecas
+- Clareza na arquitetura backend
+
+---
+
+### ✔ Persistência leve (JSON)
+- Simulação de banco de dados
+- Fácil migração para PostgreSQL ou MongoDB
+- Ideal para prototipação e MVP
+
+---
+
+### ✔ Arquitetura separada
+- Frontend: Vercel (CDN + SPA)
+- Backend: Render (API REST)
+
+---
+
+## 🔌 API Endpoints
+
+### 📡 Pedidos
+
+| Método | Endpoint | Descrição |
+|--------|----------|----------|
+| GET | `/api/pedidos` | Lista todos os pedidos |
+| POST | `/api/pedidos` | Cria novo pedido |
+| PUT | `/api/pedidos/:id` | Atualiza status |
+| GET | `/api/pedidos/:id/logs` | Histórico de logs |
+
+---
+
+## 🔁 Workflow Automático
+
+Quando um pedido é criado:
+
+Pedido registrado
+Prioridade calculada automaticamente
+Status → "Em análise"
+Webhook simulado disparado
+Logs de auditoria gerados
+Alertas enviados (caso prioridade alta/crítica)
+
+---
+
+## 🧪 Exemplo de Requisição
+
+### Criar pedido
 ```bash
-# Health check
-curl https://erp-automation-system.onrender.com/api/health
+POST /api/pedidos
+Content-Type: application/json
 
-# Criar pedido
-curl -X POST https://erp-automation-system.onrender.com/api/pedidos \
-  -H "Content-Type: application/json" \
-  -d '{"cliente":"Empresa X","descricao":"Pedido teste","prioridade":"alta"}'
+{
+  "cliente": "Empresa X",
+  "valor": 3500
+}
+Resposta
+{
+  "sucesso": true,
+  "dados": {
+    "id": 1,
+    "cliente": "Empresa X",
+    "valor": 3500,
+    "prioridade": "Alta",
+    "status": "Em análise",
+    "criado_em": "2026-04-22T..."
+  }
+}
+🧩 Tecnologias Utilizadas
+Backend
+Node.js (HTTP nativo)
+File System (fs)
+JSON (persistência local)
+Routing manual
+Frontend
+HTML5
+CSS3
+JavaScript (Vanilla JS)
+Fetch API
+Integrações
+ViaCEP API (autopreenchimento de endereço)
+☁️ Deploy
+Backend (Render)
+Node.js Web Service
+Porta dinâmica (process.env.PORT)
+Root Directory configurado corretamente
+Frontend (Vercel)
+Hosting estático
+SPA fallback ativado
+Comunicação com API externa
+🎯 Diferenciais do Projeto
 
-# Listar pedidos
-curl https://erp-automation-system.onrender.com/api/pedidos
-```
+✔ Sistema inspirado em ERP real
+✔ Pipeline de automação (workflow engine)
+✔ Logs de auditoria completos
+✔ Arquitetura moderna (frontend + backend separados)
+✔ Deploy em produção (Render + Vercel)
+✔ Sem frameworks (controle total da stack)
+✔ Simulação de ambiente SaaS escalável
+
+📈 Objetivo do Projeto
+
+Este projeto foi desenvolvido para demonstrar:
+
+Capacidade de engenharia de software
+Construção de sistemas backend reais
+Arquitetura de aplicações escaláveis
+Integração frontend/backend profissional
+Mentalidade de produto (SaaS)
