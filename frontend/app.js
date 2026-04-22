@@ -508,4 +508,4 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(() => carregarPedidos(), 30000);
 });
 
-const API = "";
+const API = "https://erp-automation-system.onrender.com";
