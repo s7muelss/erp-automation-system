@@ -1,267 +1,192 @@
 # ERP Automation System
 
-> Sistema empresarial de gerenciamento de pedidos com automação de processos, regras de negócio inteligentes e integração com APIs externas.
+## 🔍 Diagnóstico dos Problemas (e Correções Aplicadas)
+
+### Problema 1 — Render retorna 404 na raiz "/"
+**Causa raiz:** O servidor Node puro não tinha handler para `/`.  
+Qualquer requisição que não batesse explicitamente em `/pedidos` caia em erro.
+
+**Correção:** Adicionado roteamento completo:
+- Rotas de API sob `/api/*`
+- Fallback estático com `serveStatic()` para todo o resto
+- Fallback SPA: serve `index.html` para qualquer rota desconhecida
 
 ---
 
-## Sumário
+### Problema 2 — `HOST = 'localhost'` no Render
+**Causa raiz:** `server.listen(PORT, 'localhost')` no Render significa que o servidor só
+escuta em loopback interno — o proxy externo do Render não consegue alcançar o processo.
 
-- [Sobre o Projeto](#sobre-o-projeto)
-- [Tecnologias](#tecnologias)
-- [Funcionalidades](#funcionalidades)
-- [Regras de Negócio](#regras-de-negócio)
-- [Automação de Processos (Workflow)](#automação-de-processos-workflow)
-- [Estrutura do Projeto](#estrutura-do-projeto)
-- [Como Rodar](#como-rodar)
-- [Endpoints da API](#endpoints-da-api)
-- [Interface Visual](#interface-visual)
+**Correção:**
+```js
+// ❌ ERRADO
+server.listen(PORT, 'localhost', ...)
 
----
-
-## Sobre o Projeto
-
-O **ERP Automation System** é uma aplicação full-stack que simula um módulo de gerenciamento de pedidos de um sistema ERP empresarial. O foco do projeto é demonstrar como processos empresariais podem ser automatizados com regras de negócio claras, rastreabilidade de workflow e integração entre sistemas.
-
-O projeto simula comportamentos encontrados em ferramentas reais como:
-- **SAP / Totvs** — gerenciamento de pedidos e status
-- **n8n / Zapier** — pipeline de automação de processos
-- **Power Automate** — workflows disparados por eventos
-
----
-
-## Impacto do Projeto
-
-Este sistema foi desenvolvido para simular ganhos reais em um ambiente corporativo, como:
-
-- Redução de tarefas manuais através de automação de processos
-- Padronização do fluxo de pedidos
-- Tomada de decisão automatizada baseada em regras de negócio
-- Integração entre sistemas via APIs
-- Rastreabilidade completa de eventos (workflow)
-
-O objetivo é demonstrar como soluções simples podem escalar para cenários empresariais reais.
----
-
-## Tecnologias
-
-| Camada      | Tecnologia         | Motivo                                  |
-|-------------|--------------------|-----------------------------------------|
-| Backend     | Node.js + Express  | API REST performática e simples         |
-| Banco       | SQLite (better-sqlite3) | Persistência sem configuração extra |
-| Frontend    | HTML + CSS + JS    | Zero dependências, máximo controle      |
-| API Externa | ViaCEP             | Autopreenchimento de endereços          |
-| Protocolo   | REST + JSON        | Padrão de integração empresarial        |
-
----
-
-## Funcionalidades
-
-### Sistema de Pedidos
-- Criar pedidos com cliente, valor e endereço (opcional)
-- Listar todos os pedidos com filtros e busca
-- Atualizar status de qualquer pedido
-- Visualizar histórico completo de automação por pedido
-
-### Integração com ViaCEP
-- Usuário digita o CEP no formulário
-- O sistema consulta automaticamente a API pública ViaCEP
-- Logradouro, bairro, cidade e UF são preenchidos automaticamente
-
-### KPIs em Tempo Real
-- Total de pedidos
-- Pedidos em análise
-- Pedidos de alta prioridade
-- Volume financeiro total
-
----
-
-## Regras de Negócio
-
-A prioridade de um pedido é calculada automaticamente no momento da criação, com base no valor:
-
-```
-valor > R$ 5.000  →  Prioridade: CRÍTICA  ⚠️
-valor > R$ 1.000  →  Prioridade: ALTA
-valor ≤ R$ 1.000  →  Prioridade: NORMAL
+// ✅ CORRETO
+const HOST = '0.0.0.0';
+server.listen(PORT, HOST, ...)
 ```
 
-Essa lógica está implementada no backend (`server.js`, função `calcularPrioridade`) e espelhada visualmente no frontend em tempo real conforme o usuário digita o valor.
+---
+
+### Problema 3 — PORT hardcoded
+**Causa raiz:** Render injeta `process.env.PORT` dinamicamente. Se o código usa porta
+fixa (ex: 3000), o servidor sobe em porta errada e o Render não consegue fazer proxy.
+
+**Correção:**
+```js
+const PORT = process.env.PORT || 3000;
+```
 
 ---
 
-## Automação de Processos (Workflow)
+### Problema 4 — Paths com `__dirname` quebrando no Render
+**Causa raiz:** Caminhos relativos como `./data/pedidos.json` funcionam em dev mas
+quebram quando o working directory muda no Render.
 
-Ao criar um pedido, o sistema executa automaticamente um **pipeline de 5 etapas**, simulando um workflow empresarial (similar ao n8n):
-
+**Correção:** Usar sempre `path.join(__dirname, ...)`:
+```js
+const DATA_FILE = path.join(__dirname, 'data', 'pedidos.json');
 ```
-[1] PEDIDO_CRIADO
-    └─ Registro no banco de dados com timestamp
-
-[2] PRIORIDADE_CALCULADA
-    └─ Aplicação da regra de negócio com base no valor
-
-[3] STATUS_ALTERADO
-    └─ Transição automática: "Novo" → "Em análise"
-    └─ Sem intervenção humana necessária
-
-[4] WEBHOOK_DISPARADO
-    └─ Simulação de integração com sistemas externos
-    └─ Payload JSON gerado no console (produção: HTTP POST)
-
-[5] ALERTA_PRIORIDADE_ALTA  (condicional)
-    └─ Disparado apenas para pedidos Alta/Crítica
-    └─ Simula notificação por email e Slack
-```
-
-Todos os eventos são **persistidos no banco** na tabela `workflow_logs` e exibidos na interface como uma linha do tempo ao vivo.
 
 ---
 
-## Estrutura do Projeto
+### Problema 5 — Falta de CORS
+**Causa raiz:** Sem headers CORS, o browser bloqueia requisições do Vercel para o Render.
+
+**Correção:** Headers adicionados em **toda** resposta, incluindo preflight OPTIONS:
+```js
+res.setHeader('Access-Control-Allow-Origin', FRONTEND_ORIGIN);
+res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+```
+
+---
+
+### Problema 6 — rootDir incorreto no Render
+**Causa raiz:** Se o `rootDir` no dashboard do Render aponta para a raiz do repositório
+mas o `package.json` está em `backend/`, o `startCommand: node server.js` falha.
+
+**Correção:** `render.yaml` com `rootDir: backend`.
+
+---
+
+### Problema 7 — URL da API hardcoded no frontend
+**Causa raiz:** URL de API usando `localhost` em produção ou URL errada do Render.
+
+**Correção:** Detecção automática de ambiente no `app.js`:
+- Vercel → aponta para `https://erp-automation-system.onrender.com/api`
+- Mesmo servidor → usa `window.location.origin + /api`
+- Localhost → `http://localhost:3000/api`
+
+---
+
+## 📁 Estrutura do Projeto
 
 ```
-erp-automation/
+erp-automation-system/
+├── render.yaml              ← config automática do Render
+├── .gitignore
 ├── backend/
-│   ├── server.js          # Servidor Express + lógica de negócio + workflow
-│   ├── package.json       # Dependências do backend
-│   └── erp.db             # Banco SQLite (gerado automaticamente)
-│
-├── frontend/
-│   ├── index.html         # Interface do ERP
-│   ├── style.css          # Design system industrial dark
-│   └── app.js             # Lógica do frontend + integração ViaCEP
-│
-└── README.md
+│   ├── server.js            ← servidor Node puro (CORRIGIDO)
+│   ├── package.json         ← scripts corretos
+│   └── data/
+│       └── pedidos.json     ← criado automaticamente
+└── frontend/
+    ├── index.html
+    ├── app.js
+    ├── style.css
+    └── vercel.json          ← config SPA do Vercel
 ```
 
 ---
 
-## Como Rodar
+## 🚀 Deploy — Passo a Passo
 
-### Pré-requisitos
-- **Node.js** v18+ instalado
-- Conexão com internet (para ViaCEP e fontes Google)
+### Backend no Render
 
-### 1. Instalar dependências do backend
+1. Acesse [render.com](https://render.com) → "New Web Service"
+2. Conecte seu repositório GitHub
+3. Configure:
+   - **Name:** `erp-automation-system`
+   - **Root Directory:** `backend`  ← **CRÍTICO**
+   - **Build Command:** _(deixar em branco ou `echo ok`)_
+   - **Start Command:** `node server.js`
+   - **Environment:** Node
+4. Em "Environment Variables", adicione:
+   - `NODE_ENV` = `production`
+   - `FRONTEND_ORIGIN` = `https://seu-projeto.vercel.app`
+5. Clique em "Create Web Service"
+6. Aguarde o deploy e acesse: `https://erp-automation-system.onrender.com/api/health`
+
+> **Alternativa:** Use o `render.yaml` na raiz do repo para configuração automática.
+
+---
+
+### Frontend no Vercel
+
+1. Acesse [vercel.com](https://vercel.com) → "New Project"
+2. Conecte o repositório
+3. Configure:
+   - **Root Directory:** `frontend`  ← **CRÍTICO**
+   - **Framework Preset:** Other
+   - Build/Output: _(deixar padrão)_
+4. Deploy → Vercel detecta `vercel.json` automaticamente
+
+---
+
+### Atualizar URL da API no Frontend
+
+Se a URL do seu Render for diferente, edite `frontend/app.js`:
+```js
+// Linha ~10 — troque pela sua URL real:
+return "https://SEU-PROJETO.onrender.com/api";
+```
+
+Ou injete via variável de ambiente no Vercel:
+1. Vercel → Settings → Environment Variables
+2. Adicione: `NEXT_PUBLIC_API_URL` = `https://seu.onrender.com/api`
+3. No `index.html`, antes de carregar `app.js`:
+   ```html
+   <script>window.ENV_API_URL = "https://seu.onrender.com/api";</script>
+   ```
+
+---
+
+## 🔗 Endpoints da API
+
+| Método | Rota                     | Descrição                        |
+|--------|--------------------------|----------------------------------|
+| GET    | `/api/health`            | Health check (monitoramento)     |
+| GET    | `/api/pedidos`           | Lista pedidos (filtros opcionais)|
+| POST   | `/api/pedidos`           | Cria novo pedido                 |
+| GET    | `/api/pedidos/:id`       | Busca pedido por ID              |
+| PUT    | `/api/pedidos/:id`       | Atualiza pedido / status         |
+| GET    | `/api/pedidos/:id/logs`  | Histórico de logs do pedido      |
+
+### Filtros disponíveis (GET /api/pedidos):
+- `?status=pendente|em_andamento|concluido|cancelado`
+- `?cliente=nome`
+
+### Workflow de Status:
+```
+pendente → em_andamento → concluido
+pendente → cancelado
+em_andamento → cancelado
+```
+
+---
+
+## 🧪 Teste rápido da API
 
 ```bash
-cd backend
-npm install
+# Health check
+curl https://erp-automation-system.onrender.com/api/health
+
+# Criar pedido
+curl -X POST https://erp-automation-system.onrender.com/api/pedidos \
+  -H "Content-Type: application/json" \
+  -d '{"cliente":"Empresa X","descricao":"Pedido teste","prioridade":"alta"}'
+
+# Listar pedidos
+curl https://erp-automation-system.onrender.com/api/pedidos
 ```
-
-### 2. Iniciar o servidor
-
-```bash
-node server.js
-# ou para desenvolvimento com hot-reload:
-npx nodemon server.js
-```
-
-O servidor iniciará em: **http://localhost:3000**
-
-### 3. Acessar o frontend
-
-Abra o navegador e acesse:
-```
-http://localhost:3000
-```
-
-O backend já serve os arquivos estáticos do frontend automaticamente.
-
----
-
-## Endpoints da API
-
-### `GET /pedidos`
-Retorna todos os pedidos com seus logs de workflow.
-
-**Resposta:**
-```json
-{
-  "sucesso": true,
-  "total": 5,
-  "dados": [
-    {
-      "id": 1,
-      "cliente": "Empresa XPTO Ltda",
-      "valor": 2500.00,
-      "prioridade": "Alta",
-      "status": "Em análise",
-      "cidade": "São Paulo",
-      "uf": "SP",
-      "criado_em": "2024-01-15T14:30:00.000Z",
-      "workflow_logs": [...]
-    }
-  ]
-}
-```
-
-### `POST /pedidos`
-Cria um novo pedido e executa o pipeline de automação.
-
-**Body:**
-```json
-{
-  "cliente": "Empresa XPTO Ltda",
-  "valor": 2500.00,
-  "cep": "01310100",
-  "endereco": "Avenida Paulista",
-  "bairro": "Bela Vista",
-  "cidade": "São Paulo",
-  "uf": "SP"
-}
-```
-
-### `PUT /pedidos/:id`
-Atualiza o status de um pedido. Dispara log de workflow e webhook.
-
-**Body:**
-```json
-{ "status": "Aprovado" }
-```
-
-**Status válidos:** `Novo` | `Em análise` | `Aprovado` | `Recusado` | `Concluído`
-
-### `GET /pedidos/:id/logs`
-Retorna o histórico completo de automação de um pedido específico.
-
----
-
-## Interface Visual
-
-### Dashboard Principal
-- Header fixo com relógio em tempo real e indicador de workflow ativo
-- 4 KPIs atualizados automaticamente após cada operação
-- Grid de 2 colunas: formulário à esquerda, tabela à direita
-
-### Formulário de Pedido
-- Preview de prioridade calculada em tempo real enquanto o usuário digita o valor
-- Busca de CEP com um clique (integração ViaCEP)
-- Endereço preenchido automaticamente com animação
-
-### Tabela Operacional
-- Busca por cliente ou ID
-- Filtros por status e prioridade
-- Seletor inline de status para atualização rápida
-- Destaque visual automático em novas linhas inseridas
-
-### Linha do Tempo de Workflow
-- Exibe os eventos de automação do pedido mais recente
-- Atualizada em tempo real após cada criação
-- Mostra detalhes técnicos de cada etapa do pipeline
-
----
-
-## Onde Ocorre a Automação
-
-No arquivo `backend/server.js`, a função `executarWorkflowCriacao()` é o **motor de automação**. Ela é chamada automaticamente após cada `POST /pedidos` e executa:
-
-1. Logs rastreáveis com `registrarWorkflowLog()`
-2. Cálculo de prioridade com `calcularPrioridade()`
-3. Transição de status sem intervenção humana
-4. Disparo de webhook com `simularWebhook()`
-5. Alertas condicionais baseados em regras de negócio
-
----
-
-*Projeto desenvolvido para demonstrar habilidades em automação de processos empresariais, APIs REST, integração com sistemas externos e desenvolvimento full-stack.*

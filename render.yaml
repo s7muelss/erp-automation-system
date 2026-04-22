@@ -1,0 +1,20 @@
+# render.yaml — Configuração do Render para o ERP Automation System
+# Coloque este arquivo na RAIZ do repositório
+# https://render.com/docs/yaml-spec
+
+services:
+  - type: web
+    name: erp-automation-system
+    env: node
+    region: oregon             # ou frankfurt para menor latência no Brasil
+    plan: free                 # ou starter para cold start melhorado
+    rootDir: backend           # ← CRÍTICO: aponta para a pasta do backend
+    buildCommand: "echo 'No build step required'"
+    startCommand: "node server.js"
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: FRONTEND_ORIGIN
+        # Troque pela URL real do seu Vercel
+        value: https://seu-projeto.vercel.app

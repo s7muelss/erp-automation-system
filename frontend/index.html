@@ -5,263 +5,168 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ERP Automation System</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚙️</text></svg>" />
 </head>
 <body>
+  <div id="app">
 
-  <!-- ═══════════════════════════════════════════════════════
-       HEADER
-  ═══════════════════════════════════════════════════════ -->
-  <header class="erp-header">
-    <div class="header-inner">
-      <a class="header-logo" href="#">
-        <div class="logo-mark"></div>
-        <span class="logo-text">ERP<span>Auto</span></span>
-      </a>
-      <div class="header-sep"></div>
-      <span class="header-subtitle">Sistema de Automação de Processos Empresariais</span>
-
-      <div class="header-status">
-        <div class="status-indicator">
-          <div class="status-dot"></div>
-          Workflow Engine Ativo
+    <!-- ─── Sidebar ─────────────────────────────────────────────── -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <span class="brand-icon">⚙️</span>
+        <div class="brand-text">
+          <span class="brand-title">ERP System</span>
+          <span class="brand-sub">Automation</span>
         </div>
-        <div class="header-clock" id="header-clock">00:00:00</div>
       </div>
-    </div>
-  </header>
-
-  <!-- ═══════════════════════════════════════════════════════
-       CONTEÚDO PRINCIPAL
-  ═══════════════════════════════════════════════════════ -->
-  <main class="erp-main">
-
-    <!-- KPIs -->
-    <div class="kpi-strip">
-      <div class="kpi-card">
-        <span class="kpi-label">Total de Pedidos</span>
-        <span class="kpi-value amber" id="kpi-total">0</span>
-        <span class="kpi-delta">atualizado em tempo real</span>
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item active" data-page="dashboard">
+          <span class="nav-icon">📊</span> Dashboard
+        </a>
+        <a href="#" class="nav-item" data-page="pedidos">
+          <span class="nav-icon">📋</span> Pedidos
+        </a>
+        <a href="#" class="nav-item" data-page="novo">
+          <span class="nav-icon">➕</span> Novo Pedido
+        </a>
+      </nav>
+      <div class="sidebar-footer">
+        <span id="api-status" class="api-badge checking">🔄 Verificando API...</span>
       </div>
-      <div class="kpi-card">
-        <span class="kpi-label">Em Análise</span>
-        <span class="kpi-value blue" id="kpi-analise">0</span>
-        <span class="kpi-delta">workflow automático</span>
-      </div>
-      <div class="kpi-card">
-        <span class="kpi-label">Alta Prioridade</span>
-        <span class="kpi-value red" id="kpi-alta">0</span>
-        <span class="kpi-delta">valor &gt; R$ 1.000</span>
-      </div>
-      <div class="kpi-card">
-        <span class="kpi-label">Volume Total (R$)</span>
-        <span class="kpi-value green" id="kpi-volume">0</span>
-        <span class="kpi-delta">soma de todos os pedidos</span>
-      </div>
-    </div>
+    </aside>
 
-    <!-- Grid principal -->
-    <div class="content-grid">
+    <!-- ─── Main ─────────────────────────────────────────────────── -->
+    <main class="main-content">
 
-      <!-- ──────────────────────────────────────────────────
-           PAINEL ESQUERDO: Formulário + Workflow
-      ────────────────────────────────────────────────── -->
-      <div class="left-col">
+      <!-- Header -->
+      <header class="top-bar">
+        <h1 id="page-title">Dashboard</h1>
+        <div class="top-bar-actions">
+          <button class="btn btn-secondary" onclick="App.refreshData()">🔄 Atualizar</button>
+        </div>
+      </header>
 
-        <!-- Formulário de Pedido -->
-        <div class="panel">
-          <div class="panel-header">
-            <svg class="panel-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4" />
-            </svg>
-            <span class="panel-title">Novo Pedido</span>
-            <span class="panel-badge">WORKFLOW</span>
+      <!-- Toast container -->
+      <div id="toast-container"></div>
+
+      <!-- ─── PÁGINA: Dashboard ────────────────────────────────── -->
+      <section id="page-dashboard" class="page active">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon pending">📬</div>
+            <div class="stat-body">
+              <span class="stat-value" id="stat-pendente">—</span>
+              <span class="stat-label">Pendentes</span>
+            </div>
           </div>
-          <div class="panel-body">
-
-            <!-- Campo: Cliente -->
-            <div class="form-group">
-              <label class="form-label" for="cliente">
-                Cliente <span class="required">*</span>
-              </label>
-              <input
-                class="form-input"
-                id="cliente"
-                type="text"
-                placeholder="Nome da empresa ou pessoa"
-                autocomplete="off"
-              />
+          <div class="stat-card">
+            <div class="stat-icon progress">⚡</div>
+            <div class="stat-body">
+              <span class="stat-value" id="stat-andamento">—</span>
+              <span class="stat-label">Em Andamento</span>
             </div>
-
-            <!-- Campo: Valor -->
-            <div class="form-group">
-              <label class="form-label" for="valor">
-                Valor do Pedido (R$) <span class="required">*</span>
-              </label>
-              <input
-                class="form-input"
-                id="valor"
-                type="number"
-                min="0.01"
-                step="0.01"
-                placeholder="0,00"
-              />
-              <!-- Preview de prioridade em tempo real -->
-              <div class="priority-preview" id="priority-preview">
-                <span class="preview-label">Prioridade calculada:</span>
-                <span class="preview-value normal" id="preview-value">Normal</span>
-              </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon done">✅</div>
+            <div class="stat-body">
+              <span class="stat-value" id="stat-concluido">—</span>
+              <span class="stat-label">Concluídos</span>
             </div>
-
-            <hr class="form-divider" />
-
-            <!-- Campo: CEP com ViaCEP -->
-            <div class="form-group">
-              <label class="form-label" for="cep">CEP (opcional — autopreenchimento)</label>
-              <div class="input-group">
-                <input
-                  class="form-input"
-                  id="cep"
-                  type="text"
-                  placeholder="00000-000"
-                  maxlength="9"
-                />
-                <button class="btn-icon" id="btn-buscar-cep" title="Buscar CEP">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M16.65 11a5.65 5.65 0 11-11.3 0 5.65 5.65 0 0111.3 0z" />
-                  </svg>
-                </button>
-              </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon total">📦</div>
+            <div class="stat-body">
+              <span class="stat-value" id="stat-total">—</span>
+              <span class="stat-label">Total</span>
             </div>
+          </div>
+        </div>
 
-            <!-- Campos de endereço (preenchidos automaticamente) -->
-            <div class="address-block" id="address-block">
-              <div class="form-group">
-                <label class="form-label">Logradouro</label>
-                <input class="form-input" id="addr-logradouro" type="text" readonly />
-              </div>
-              <div class="address-grid">
-                <div class="form-group">
-                  <label class="form-label">Bairro</label>
-                  <input class="form-input" id="addr-bairro" type="text" readonly />
-                </div>
-                <div class="form-group">
-                  <label class="form-label">UF</label>
-                  <input class="form-input" id="addr-uf" type="text" readonly />
+        <div class="card mt-2">
+          <div class="card-header">
+            <h2>Pedidos Recentes</h2>
+          </div>
+          <div class="card-body">
+            <div id="recent-pedidos" class="pedidos-list">
+              <div class="loading-spinner">Carregando...</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ─── PÁGINA: Pedidos ──────────────────────────────────── -->
+      <section id="page-pedidos" class="page">
+        <div class="page-toolbar">
+          <div class="filter-group">
+            <label>Filtrar por status:</label>
+            <select id="filter-status" onchange="App.filterPedidos()">
+              <option value="">Todos</option>
+              <option value="pendente">Pendente</option>
+              <option value="em_andamento">Em Andamento</option>
+              <option value="concluido">Concluído</option>
+              <option value="cancelado">Cancelado</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Buscar cliente:</label>
+            <input type="text" id="filter-cliente" placeholder="Nome do cliente..." oninput="App.filterPedidos()" />
+          </div>
+        </div>
+        <div id="pedidos-container" class="pedidos-list">
+          <div class="loading-spinner">Carregando...</div>
+        </div>
+      </section>
+
+      <!-- ─── PÁGINA: Novo Pedido ──────────────────────────────── -->
+      <section id="page-novo" class="page">
+        <div class="card form-card">
+          <div class="card-header"><h2>Criar Novo Pedido</h2></div>
+          <div class="card-body">
+            <div class="form-group">
+              <label for="f-cliente">Cliente *</label>
+              <input type="text" id="f-cliente" placeholder="Nome do cliente" />
+            </div>
+            <div class="form-group">
+              <label for="f-descricao">Descrição *</label>
+              <textarea id="f-descricao" rows="4" placeholder="Descreva o pedido..."></textarea>
+            </div>
+            <div class="form-group">
+              <label for="f-prioridade">Prioridade</label>
+              <select id="f-prioridade">
+                <option value="baixa">Baixa</option>
+                <option value="media" selected>Média</option>
+                <option value="alta">Alta</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Itens do Pedido</label>
+              <div id="itens-container">
+                <div class="item-row">
+                  <input type="text" placeholder="Nome do item" class="item-nome" />
+                  <input type="number" placeholder="Qtd" class="item-qtd" min="1" value="1" />
+                  <button class="btn-remove-item" onclick="App.removeItem(this)">✕</button>
                 </div>
               </div>
-              <div class="form-group">
-                <label class="form-label">Cidade</label>
-                <input class="form-input" id="addr-cidade" type="text" readonly />
-              </div>
+              <button class="btn btn-ghost mt-1" onclick="App.addItem()">+ Adicionar item</button>
             </div>
-
-            <hr class="form-divider" />
-
-            <!-- Botão de submit -->
-            <button class="btn-primary" id="btn-submit">
-              <span class="spinner" id="btn-spinner"></span>
-              <svg id="btn-icon-submit" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              Criar Pedido & Executar Workflow
-            </button>
-
+            <div class="form-actions">
+              <button class="btn btn-secondary" onclick="App.navigate('pedidos')">Cancelar</button>
+              <button class="btn btn-primary" onclick="App.criarPedido()">Criar Pedido</button>
+            </div>
           </div>
         </div>
+      </section>
 
-        <!-- Painel: Logs de Workflow -->
-        <div class="panel workflow-panel" style="margin-top: 20px;">
-          <div class="panel-header">
-            <svg class="panel-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-            <span class="panel-title">Workflow Logs</span>
-            <span class="panel-badge" id="log-badge">AO VIVO</span>
-          </div>
-          <div class="log-timeline" id="log-timeline">
-            <div class="log-empty">Aguardando eventos do workflow...</div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- ──────────────────────────────────────────────────
-           PAINEL DIREITO: Tabela de Pedidos
-      ────────────────────────────────────────────────── -->
-      <div class="panel">
-        <div class="panel-header">
-          <svg class="panel-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 012-2h2a2 2 0 012 2v10a2 2 0 01-2 2h-2a2 2 0 01-2-2" />
-          </svg>
-          <span class="panel-title">Pedidos — Visão Operacional</span>
-          <span class="panel-badge" id="table-count-badge">0 registros</span>
-        </div>
-
-        <!-- Filtros e busca -->
-        <div class="table-controls">
-          <input
-            class="search-input"
-            id="search-input"
-            type="text"
-            placeholder="Buscar por cliente ou ID..."
-          />
-          <select class="filter-select" id="filter-status">
-            <option value="">Todos os status</option>
-            <option value="Novo">Novo</option>
-            <option value="Em análise">Em análise</option>
-            <option value="Aprovado">Aprovado</option>
-            <option value="Recusado">Recusado</option>
-            <option value="Concluído">Concluído</option>
-          </select>
-          <select class="filter-select" id="filter-prioridade">
-            <option value="">Todas</option>
-            <option value="Normal">Normal</option>
-            <option value="Alta">Alta</option>
-            <option value="Crítica">Crítica</option>
-          </select>
-          <button class="btn-refresh" id="btn-refresh" title="Atualizar lista">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-          </button>
-        </div>
-
-        <!-- Tabela -->
-        <div class="table-wrapper">
-          <table class="erp-table">
-            <thead>
-              <tr>
-                <th>#ID</th>
-                <th>Cliente</th>
-                <th>Valor</th>
-                <th>Prioridade</th>
-                <th>Status</th>
-                <th>Endereço</th>
-                <th>Criado em</th>
-                <th>Alterar Status</th>
-              </tr>
-            </thead>
-            <tbody id="table-body">
-              <!-- Linhas geradas via JavaScript -->
-            </tbody>
-          </table>
-
-          <!-- Empty state -->
-          <div class="empty-state hidden" id="empty-state">
-            <svg class="empty-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-            </svg>
-            <span class="empty-title">Nenhum pedido encontrado</span>
-            <span class="empty-sub">Crie o primeiro pedido no formulário ao lado</span>
-          </div>
+      <!-- ─── MODAL: Detalhes / Edição ─────────────────────────── -->
+      <div id="modal-overlay" class="modal-overlay hidden" onclick="App.closeModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+          <button class="modal-close" onclick="App.closeModal()">✕</button>
+          <div id="modal-content"></div>
         </div>
       </div>
 
-    </div>
-  </main>
-
-  <!-- Container de Toasts / Notificações -->
-  <div class="toast-container" id="toast-container"></div>
+    </main>
+  </div>
 
   <script src="app.js"></script>
 </body>
