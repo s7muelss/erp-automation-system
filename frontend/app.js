@@ -14,7 +14,7 @@
 'use strict';
 
 // ─── Configuração ────────────────────────────────────────────
-const API = "https://erp-automation-system.onrender.com";
+const API_BASE = "https://erp-automation-system.onrender.com";
 
 // Cache local dos pedidos para filtros sem nova requisição
 let pedidosCache = [];
