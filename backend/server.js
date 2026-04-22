@@ -15,7 +15,7 @@ const { URL } = require('url');
 
 const PORT = process.env.PORT || 3000;
 const DB_FILE  = path.join(__dirname, 'erp-data.json');
-const FRONTEND = __dirname;
+const FRONTEND = path.join(__dirname, 'frontend');
 
 // ─── Banco de Dados (JSON) ────────────────────────────────────
 function carregarDB() {
