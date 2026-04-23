@@ -81,3 +81,4 @@ function verify(token) {
 }
 
 module.exports = { sign, verify };
+

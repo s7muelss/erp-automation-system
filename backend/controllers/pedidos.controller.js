@@ -155,3 +155,4 @@ async function exportarCSV(req, res) {
 }
 
 module.exports = { listar, buscarPorId, criar, atualizar, buscarLogs, exportarCSV };
+

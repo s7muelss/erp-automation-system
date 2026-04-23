@@ -12,3 +12,4 @@ function corsMiddleware(req, res) {
 }
 
 module.exports = corsMiddleware;
+

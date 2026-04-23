@@ -102,3 +102,4 @@ async function appendLog(id, logEntry) {
 }
 
 module.exports = { init, findAll, findById, create, update, appendLog, readAll };
+

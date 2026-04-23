@@ -5,3 +5,4 @@ function loggerMiddleware(req, startTime) {
 }
 
 module.exports = loggerMiddleware;
+

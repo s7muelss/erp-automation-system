@@ -188,3 +188,4 @@ async function buscarLogs(id) {
 }
 
 module.exports = { listar, buscarPorId, criar, atualizar, buscarLogs };
+

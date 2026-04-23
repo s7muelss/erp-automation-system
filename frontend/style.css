@@ -354,12 +354,7 @@ body {
 }
 
 /* ── Formulários ────────────────────────────────────────────────────────── */
-.form-card { /* max-width removido — layout de 2 colunas controla o espaço */
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 18px 22px;
-}
+.form-card { /* max-width removido — layout de 2 colunas controla o espaço */ }
 
 .form-row {
   display: grid;
@@ -476,6 +471,8 @@ textarea { resize: vertical; min-height: 80px; }
 .btn-sm       { padding: 5px 11px; font-size: .78rem; }
 .btn-full     { width: 100%; justify-content: center; padding: 10px; }
 .btn-icon     { padding: 8px; }
+.btn-icon-text { }
+
 .btn-primary   { background: var(--accent);    color: #fff; }
 .btn-secondary { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
 .btn-ghost     { background: transparent; color: var(--accent); border: 1px solid rgba(79,142,247,.3); }
@@ -913,7 +910,6 @@ textarea { resize: vertical; min-height: 80px; }
   color: var(--text-dim);
   font-size: .82rem;
   display: -webkit-box;
-  line-clamp: 3;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
@@ -1000,3 +996,5 @@ textarea { resize: vertical; min-height: 80px; }
   .summary-body        { display: flex; flex-direction: column; }
   .stats-grid          { grid-template-columns: repeat(2, 1fr); }
 }
+
+
