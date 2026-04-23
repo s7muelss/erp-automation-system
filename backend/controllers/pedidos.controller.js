@@ -67,35 +67,29 @@ async function exportarCSV(req, res) {
   try {
     const pedidos = await pedidosService.listar();
 
-    // Separador ponto e vírgula — padrão do Excel em pt-BR
     const SEP = ";";
 
-    // Tradução dos valores para o usuário final
     const statusPT = {
       pendente:     "Pendente",
       em_andamento: "Em Andamento",
-      concluido:    "Concluído",
+      concluido:    "Concluido",
       cancelado:    "Cancelado",
     };
     const prioridadePT = {
       alta:  "Alta",
-      media: "Média",
+      media: "Media",
       baixa: "Baixa",
     };
 
     function fmtData(iso) {
       if (!iso) return "";
       const d = new Date(iso);
-      return d.toLocaleString("pt-BR", {
-        day: "2-digit", month: "2-digit", year: "numeric",
-        hour: "2-digit", minute: "2-digit",
-        timeZone: "America/Sao_Paulo",
-      });
+      const pad = n => String(n).padStart(2, "0");
+      return `${pad(d.getUTCDate())}/${pad(d.getUTCMonth()+1)}/${d.getUTCFullYear()} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
     }
 
     function csvCell(value) {
       const str = String(value ?? "");
-      // Envolve em aspas se contém separador, aspas ou quebra de linha
       if (str.includes(SEP) || str.includes('"') || str.includes("\n")) {
         return `"${str.replace(/"/g, '""')}"`;
       }
@@ -110,15 +104,15 @@ async function exportarCSV(req, res) {
     const cabecalho = [
       "ID do Pedido",
       "Cliente",
-      "Descrição",
+      "Descricao",
       "Status",
       "Prioridade",
       "Qtd de Itens",
       "Itens",
-      "Observações",
+      "Observacoes",
       "Criado Em",
       "Atualizado Em",
-      "Concluído Em",
+      "Concluido Em",
     ].map(csvCell).join(SEP);
 
     const linhas = pedidos.map(p => [
@@ -135,24 +129,20 @@ async function exportarCSV(req, res) {
       csvCell(fmtData(p.concluidoEm)),
     ].join(SEP));
 
-    // sep= instrui o Excel a usar ; como separador automaticamente
-    const excel_hint = `sep=${SEP}\n`;
-    const bom        = "\uFEFF";
-    const csv        = excel_hint + cabecalho + "\n" + linhas.join("\n");
-    const content    = bom + csv;
+    // sep= faz Excel usar ; automaticamente, sem BOM para evitar conflito de encoding
+    const csv = `sep=${SEP}\n` + cabecalho + "\n" + linhas.join("\n");
 
     const nomeArquivo = `pedidos-${new Date().toISOString().slice(0,10)}.csv`;
 
     res.writeHead(200, {
       "Content-Type":        "text/csv; charset=utf-8",
       "Content-Disposition": `attachment; filename="${nomeArquivo}"`,
-      "Content-Length":       Buffer.byteLength(content, "utf-8"),
+      "Content-Length":       Buffer.byteLength(csv, "utf-8"),
     });
-    res.end(content);
+    res.end(csv);
   } catch (err) {
     sendError(res, 500, err.message);
   }
 }
 
 module.exports = { listar, buscarPorId, criar, atualizar, buscarLogs, exportarCSV };
-
