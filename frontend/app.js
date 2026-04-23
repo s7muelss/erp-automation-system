@@ -108,9 +108,15 @@ const Auth = {
     }
   },
 
-  showLogin() {
+  showLogin(reason = null) {
     $("login-screen").classList.remove("hidden");
     $("app").classList.add("hidden");
+    // Mostra motivo do logout se houver (ex: sessão expirada)
+    if (reason) {
+      const errEl = $("login-error");
+      errEl.textContent = reason;
+      errEl.classList.remove("hidden");
+    }
     setTimeout(() => $("l-user").focus(), 100);
   },
 
@@ -133,36 +139,58 @@ const Auth = {
       return;
     }
 
-    btn.disabled    = true;
+    btn.disabled = true;
+
+    // Timer progressivo: informa sobre cold start após 4s
+    let coldStartTimer = setTimeout(() => {
+      btn.textContent = "Aguardando servidor...";
+      const hint = $("login-coldstart-hint");
+      if (hint) hint.classList.remove("hidden");
+    }, 4000);
+
     btn.textContent = "Entrando...";
 
     try {
+      const controller = new AbortController();
+      const timeout    = setTimeout(() => controller.abort(), 55_000); // 55s para Render cold start
+
       const res = await fetch(`${CONFIG.API_BASE}/auth/login`, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ username, password }),
+        signal:  controller.signal,
       });
-      const data = await res.json();
+      clearTimeout(timeout);
 
+      const data = await res.json();
       if (!res.ok) throw new Error(data.mensagem || "Credenciais inválidas");
 
       this.setToken(data.token);
       $("l-pass").value = "";
+      const hint = $("login-coldstart-hint");
+      if (hint) hint.classList.add("hidden");
       this.showApp();
       App.init();
     } catch (err) {
-      errEl.textContent = err.message;
+      let msg = err.message;
+      if (err.name === "AbortError") {
+        msg = "O servidor demorou demais para responder. Tente novamente.";
+      }
+      errEl.textContent = msg;
       errEl.classList.remove("hidden");
     } finally {
+      clearTimeout(coldStartTimer);
       btn.disabled    = false;
       btn.textContent = "Entrar";
+      const hint = $("login-coldstart-hint");
+      if (hint) hint.classList.add("hidden");
     }
   },
 
-  logout() {
+  logout(reason = null) {
     this.clearToken();
     App.state = { pedidos: [], page: "dashboard", formItens: [] };
-    this.showLogin();
+    this.showLogin(reason);
   },
 };
 
@@ -189,8 +217,8 @@ const API = {
 
       if (res.status === 401) {
         Auth.clearToken();
-        Auth.showLogin();
-        throw new Error("Sessão expirada. Faça login novamente.");
+        Auth.showLogin("Sua sessão expirou. Faça login novamente.");
+        throw new Error("Sessão expirada");
       }
 
       const data = await res.json();
@@ -252,7 +280,26 @@ const App = {
         ? recentes.map(p => this.renderPedidoCard(p)).join("")
         : `<p class="empty-state">Nenhum pedido ainda. <a href="#" onclick="App.navigate('novo')">Criar o primeiro</a></p>`;
     } catch (err) {
-      $("recent-pedidos").innerHTML = `<p class="error-state">${esc(err.message)} <button class="btn btn-ghost btn-sm" onclick="App.loadDashboard()">Tentar novamente</button></p>`;
+      const isColdStart = err.message.includes("12s") || err.message.includes("Render");
+      $("recent-pedidos").innerHTML = `
+        <div class="error-state">
+          <p>${isColdStart
+            ? "⏳ O servidor está iniciando. Isso pode levar até 50s no Render gratuito."
+            : "❌ " + esc(err.message)
+          }</p>
+          <button class="btn btn-ghost btn-sm" style="margin-top:10px"
+            onclick="App.loadDashboard()">Tentar novamente</button>
+        </div>`;
+      // Limpa stats para não mostrar valores antigos/errados
+      $("stats-grid").innerHTML = `
+        <div class="stat-card"><div class="stat-icon pending"></div>
+          <div class="stat-body"><span class="stat-value">—</span><span class="stat-label">Pendentes</span></div></div>
+        <div class="stat-card"><div class="stat-icon progress"></div>
+          <div class="stat-body"><span class="stat-value">—</span><span class="stat-label">Em Andamento</span></div></div>
+        <div class="stat-card"><div class="stat-icon done"></div>
+          <div class="stat-body"><span class="stat-value">—</span><span class="stat-label">Concluídos</span></div></div>
+        <div class="stat-card"><div class="stat-icon total"></div>
+          <div class="stat-body"><span class="stat-value">—</span><span class="stat-label">Total</span></div></div>`;
     }
   },
 

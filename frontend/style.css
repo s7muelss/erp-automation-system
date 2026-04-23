@@ -354,7 +354,12 @@ body {
 }
 
 /* ── Formulários ────────────────────────────────────────────────────────── */
-.form-card { max-width: 680px; }
+.form-card { /* max-width removido — layout de 2 colunas controla o espaço */
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 22px;
+}
 
 .form-row {
   display: grid;
@@ -704,6 +709,28 @@ textarea { resize: vertical; min-height: 80px; }
   font-size: .75rem;
   color: var(--gray);
   margin-top: 14px;
+}
+
+.login-coldstart {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: rgba(245,158,11,.08);
+  border: 1px solid rgba(245,158,11,.25);
+  border-radius: var(--radius-sm);
+  color: var(--yellow);
+  font-size: .78rem;
+  padding: 10px 12px;
+  margin-top: 10px;
+  line-height: 1.45;
+  animation: pulse-border 2s ease infinite;
+}
+.login-coldstart svg { width: 15px; height: 15px; flex-shrink: 0; margin-top: 1px; }
+.login-coldstart.hidden { display: none; }
+
+@keyframes pulse-border {
+  0%, 100% { border-color: rgba(245,158,11,.25); }
+  50%       { border-color: rgba(245,158,11,.55); }
 }
 
 /* ── Estados ────────────────────────────────────────────────────────────── */
