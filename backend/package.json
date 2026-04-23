@@ -10,7 +10,14 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "keywords": ["erp", "automation", "nodejs", "portfolio"],
-  "license": "MIT"
+  "keywords": [
+    "erp",
+    "automation",
+    "nodejs",
+    "portfolio"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "exceljs": "^4.4.0"
+  }
 }
-

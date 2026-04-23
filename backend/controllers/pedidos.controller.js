@@ -65,35 +65,67 @@ async function buscarLogs(req, res, { id }) {
 
 async function exportarCSV(req, res) {
   try {
-    const pedidos = await pedidosService.listar();
+    const ExcelJS  = require("exceljs");
+    const pedidos  = await pedidosService.listar();
 
-    const SEP = ";";
+    const wb = new ExcelJS.Workbook();
+    wb.creator  = "ERP Automation System";
+    wb.created  = new Date();
 
-    const statusPT = {
-      pendente:     "Pendente",
-      em_andamento: "Em Andamento",
-      concluido:    "Concluido",
-      cancelado:    "Cancelado",
+    const ws = wb.addWorksheet("Pedidos", {
+      pageSetup: { paperSize: 9, orientation: "landscape", fitToPage: true },
+      views: [{ state: "frozen", ySplit: 1 }], // congela cabeçalho
+    });
+
+    // ── Colunas ──────────────────────────────────────────────────
+    ws.columns = [
+      { header: "ID do Pedido",  key: "id",           width: 22 },
+      { header: "Cliente",       key: "cliente",       width: 22 },
+      { header: "Descricao",     key: "descricao",     width: 35 },
+      { header: "Status",        key: "status",        width: 16 },
+      { header: "Prioridade",    key: "prioridade",    width: 13 },
+      { header: "Qtd de Itens",  key: "qtdItens",      width: 13 },
+      { header: "Itens",         key: "itens",         width: 38 },
+      { header: "Observacoes",   key: "observacoes",   width: 28 },
+      { header: "Criado Em",     key: "criadoEm",      width: 20 },
+      { header: "Atualizado Em", key: "atualizadoEm",  width: 20 },
+      { header: "Concluido Em",  key: "concluidoEm",   width: 20 },
+    ];
+
+    // ── Estilo do cabeçalho ───────────────────────────────────────
+    const headerRow = ws.getRow(1);
+    headerRow.height = 30;
+    headerRow.eachCell(cell => {
+      cell.fill = {
+        type: "pattern", pattern: "solid",
+        fgColor: { argb: "FF1E3A5F" }, // azul escuro
+      };
+      cell.font        = { bold: true, color: { argb: "FFFFFFFF" }, size: 11, name: "Segoe UI" };
+      cell.alignment   = { vertical: "middle", horizontal: "center", wrapText: false };
+      cell.border      = {
+        bottom: { style: "medium", color: { argb: "FF4F8EF7" } },
+      };
+    });
+
+    // ── Cores por status ──────────────────────────────────────────
+    const statusConfig = {
+      pendente:     { label: "Pendente",      bg: "FFFFF3CD", font: "FF856404" },
+      em_andamento: { label: "Em Andamento",  bg: "FFD0E8FF", font: "FF0550AE" },
+      concluido:    { label: "Concluido",     bg: "FFD1FAE5", font: "FF065F46" },
+      cancelado:    { label: "Cancelado",     bg: "FFFEE2E2", font: "FF991B1B" },
     };
-    const prioridadePT = {
-      alta:  "Alta",
-      media: "Media",
-      baixa: "Baixa",
+
+    const prioConfig = {
+      alta:  { label: "Alta",  bg: "FFFEE2E2", font: "FF991B1B" },
+      media: { label: "Media", bg: "FFFFF3CD", font: "FF856404" },
+      baixa: { label: "Baixa", bg: "FFD1FAE5", font: "FF065F46" },
     };
 
     function fmtData(iso) {
       if (!iso) return "";
-      const d = new Date(iso);
+      const d   = new Date(iso);
       const pad = n => String(n).padStart(2, "0");
       return `${pad(d.getUTCDate())}/${pad(d.getUTCMonth()+1)}/${d.getUTCFullYear()} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
-    }
-
-    function csvCell(value) {
-      const str = String(value ?? "");
-      if (str.includes(SEP) || str.includes('"') || str.includes("\n")) {
-        return `"${str.replace(/"/g, '""')}"`;
-      }
-      return str;
     }
 
     function formatarItens(itens) {
@@ -101,45 +133,86 @@ async function exportarCSV(req, res) {
       return itens.map(i => `${i.nome} (${i.quantidade}x)`).join(" | ");
     }
 
-    const cabecalho = [
-      "ID do Pedido",
-      "Cliente",
-      "Descricao",
-      "Status",
-      "Prioridade",
-      "Qtd de Itens",
-      "Itens",
-      "Observacoes",
-      "Criado Em",
-      "Atualizado Em",
-      "Concluido Em",
-    ].map(csvCell).join(SEP);
+    // ── Linhas de dados ───────────────────────────────────────────
+    pedidos.forEach((p, idx) => {
+      const isEven  = idx % 2 === 0;
+      const rowBg   = isEven ? "FFF8FAFC" : "FFFFFFFF";
+      const sCfg    = statusConfig[p.status]     || { label: p.status,     bg: "FFFFFFFF", font: "FF000000" };
+      const prCfg   = prioConfig[p.prioridade]   || { label: p.prioridade, bg: "FFFFFFFF", font: "FF000000" };
 
-    const linhas = pedidos.map(p => [
-      csvCell(p.id),
-      csvCell(p.cliente),
-      csvCell(p.descricao),
-      csvCell(statusPT[p.status] || p.status),
-      csvCell(prioridadePT[p.prioridade] || p.prioridade),
-      csvCell((p.itens || []).length),
-      csvCell(formatarItens(p.itens)),
-      csvCell(p.observacoes || ""),
-      csvCell(fmtData(p.criadoEm)),
-      csvCell(fmtData(p.atualizadoEm)),
-      csvCell(fmtData(p.concluidoEm)),
-    ].join(SEP));
+      const row = ws.addRow({
+        id:           p.id,
+        cliente:      p.cliente,
+        descricao:    p.descricao,
+        status:       sCfg.label,
+        prioridade:   prCfg.label,
+        qtdItens:     (p.itens || []).length,
+        itens:        formatarItens(p.itens),
+        observacoes:  p.observacoes || "",
+        criadoEm:     fmtData(p.criadoEm),
+        atualizadoEm: fmtData(p.atualizadoEm),
+        concluidoEm:  fmtData(p.concluidoEm),
+      });
 
-    // sep= faz Excel usar ; automaticamente, sem BOM para evitar conflito de encoding
-    const csv = `sep=${SEP}\n` + cabecalho + "\n" + linhas.join("\n");
+      row.height = 22;
 
-    const nomeArquivo = `pedidos-${new Date().toISOString().slice(0,10)}.csv`;
+      row.eachCell({ includeEmpty: true }, (cell, colNum) => {
+        // Fundo alternado padrão
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: rowBg } };
+        cell.font = { size: 10, name: "Segoe UI" };
+        cell.alignment = { vertical: "middle", horizontal: "left" };
+        cell.border = {
+          top:    { style: "thin", color: { argb: "FFE2E8F0" } },
+          bottom: { style: "thin", color: { argb: "FFE2E8F0" } },
+          left:   { style: "thin", color: { argb: "FFE2E8F0" } },
+          right:  { style: "thin", color: { argb: "FFE2E8F0" } },
+        };
+
+        // Coluna Status (col 4) — cor por valor
+        if (colNum === 4) {
+          cell.fill      = { type: "pattern", pattern: "solid", fgColor: { argb: sCfg.bg } };
+          cell.font      = { bold: true, size: 10, color: { argb: sCfg.font }, name: "Segoe UI" };
+          cell.alignment = { vertical: "middle", horizontal: "center" };
+        }
+
+        // Coluna Prioridade (col 5) — cor por valor
+        if (colNum === 5) {
+          cell.fill      = { type: "pattern", pattern: "solid", fgColor: { argb: prCfg.bg } };
+          cell.font      = { bold: true, size: 10, color: { argb: prCfg.font }, name: "Segoe UI" };
+          cell.alignment = { vertical: "middle", horizontal: "center" };
+        }
+
+        // Coluna Qtd (col 6) — centralizado
+        if (colNum === 6) {
+          cell.alignment = { vertical: "middle", horizontal: "center" };
+        }
+      });
+    });
+
+    // ── Rodapé com total ──────────────────────────────────────────
+    const totalRow = ws.addRow({
+      id:       `Total: ${pedidos.length} pedido(s)`,
+      cliente:  "", descricao: "", status: "", prioridade: "",
+      qtdItens: pedidos.reduce((a, p) => a + (p.itens||[]).length, 0),
+    });
+    totalRow.height = 24;
+    totalRow.eachCell({ includeEmpty: true }, cell => {
+      cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1E3A5F" } };
+      cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 10, name: "Segoe UI" };
+      cell.alignment = { vertical: "middle" };
+    });
+
+    // ── Envia o arquivo ───────────────────────────────────────────
+    const nomeArquivo = `pedidos-${new Date().toISOString().slice(0,10)}.xlsx`;
 
     res.writeHead(200, {
-      "Content-Type":        "text/csv; charset=utf-8",
+      "Content-Type":        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       "Content-Disposition": `attachment; filename="${nomeArquivo}"`,
-      "Content-Length":       Buffer.byteLength(csv, "utf-8"),
     });
-    res.end(csv);
+
+    await wb.xlsx.write(res);
+    res.end();
+
   } catch (err) {
     sendError(res, 500, err.message);
   }
