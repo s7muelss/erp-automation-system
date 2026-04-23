@@ -67,27 +67,88 @@ async function exportarCSV(req, res) {
   try {
     const pedidos = await pedidosService.listar();
 
-    const cabecalho = ["ID", "Cliente", "Descrição", "Status", "Prioridade", "Itens", "Criado Em", "Atualizado Em"];
-    const linhas    = pedidos.map(p => [
-      p.id,
-      `"${(p.cliente   || "").replace(/"/g, '""')}"`,
-      `"${(p.descricao || "").replace(/"/g, '""')}"`,
-      p.status,
-      p.prioridade,
-      (p.itens || []).length,
-      p.criadoEm,
-      p.atualizadoEm,
-    ]);
+    // Separador ponto e vírgula — padrão do Excel em pt-BR
+    const SEP = ";";
 
-    const csv = [cabecalho.join(","), ...linhas.map(l => l.join(","))].join("\n");
-    const bom = "\uFEFF"; // BOM para Excel reconhecer UTF-8
+    // Tradução dos valores para o usuário final
+    const statusPT = {
+      pendente:     "Pendente",
+      em_andamento: "Em Andamento",
+      concluido:    "Concluído",
+      cancelado:    "Cancelado",
+    };
+    const prioridadePT = {
+      alta:  "Alta",
+      media: "Média",
+      baixa: "Baixa",
+    };
+
+    function fmtData(iso) {
+      if (!iso) return "";
+      const d = new Date(iso);
+      return d.toLocaleString("pt-BR", {
+        day: "2-digit", month: "2-digit", year: "numeric",
+        hour: "2-digit", minute: "2-digit",
+        timeZone: "America/Sao_Paulo",
+      });
+    }
+
+    function csvCell(value) {
+      const str = String(value ?? "");
+      // Envolve em aspas se contém separador, aspas ou quebra de linha
+      if (str.includes(SEP) || str.includes('"') || str.includes("\n")) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    }
+
+    function formatarItens(itens) {
+      if (!itens || itens.length === 0) return "Sem itens";
+      return itens.map(i => `${i.nome} (${i.quantidade}x)`).join(" | ");
+    }
+
+    const cabecalho = [
+      "ID do Pedido",
+      "Cliente",
+      "Descrição",
+      "Status",
+      "Prioridade",
+      "Qtd de Itens",
+      "Itens",
+      "Observações",
+      "Criado Em",
+      "Atualizado Em",
+      "Concluído Em",
+    ].map(csvCell).join(SEP);
+
+    const linhas = pedidos.map(p => [
+      csvCell(p.id),
+      csvCell(p.cliente),
+      csvCell(p.descricao),
+      csvCell(statusPT[p.status] || p.status),
+      csvCell(prioridadePT[p.prioridade] || p.prioridade),
+      csvCell((p.itens || []).length),
+      csvCell(formatarItens(p.itens)),
+      csvCell(p.observacoes || ""),
+      csvCell(fmtData(p.criadoEm)),
+      csvCell(fmtData(p.atualizadoEm)),
+      csvCell(fmtData(p.concluidoEm)),
+    ].join(SEP));
+
+    // sep= instrui o Excel a usar ; como separador automaticamente
+    const excel_hint = `sep=${SEP}\n`;
+    const bom        = "\uFEFF";
+    const csv        = excel_hint + cabecalho + "\n" + linhas.join("\n");
+    const content    = bom + csv;
+
+    const nomeArquivo = `pedidos-${new Date().toISOString().slice(0,10)}.csv`;
 
     res.writeHead(200, {
       "Content-Type":        "text/csv; charset=utf-8",
-      "Content-Disposition": `attachment; filename="pedidos-${new Date().toISOString().slice(0,10)}.csv"`,
-      "Content-Length":       Buffer.byteLength(bom + csv),
+      "Content-Disposition": `attachment; filename="${nomeArquivo}"`,
+      "Content-Length":       Buffer.byteLength(content, "utf-8"),
     });
-    res.end(bom + csv);
+    res.end(content);
   } catch (err) {
     sendError(res, 500, err.message);
   }
