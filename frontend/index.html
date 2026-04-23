@@ -5,169 +5,338 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ERP Automation System</title>
   <link rel="stylesheet" href="style.css" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚙️</text></svg>" />
 </head>
 <body>
-  <div id="app">
 
-    <!-- ─── Sidebar ─────────────────────────────────────────────── -->
-    <aside class="sidebar">
-      <div class="sidebar-brand">
-        <span class="brand-icon">⚙️</span>
-        <div class="brand-text">
-          <span class="brand-title">ERP System</span>
-          <span class="brand-sub">Automation</span>
+<!-- ─── Tela de Login ──────────────────────────────────────────────────────── -->
+<div id="login-screen" class="login-screen hidden">
+  <div class="login-card">
+    <div class="login-brand">
+      <svg class="login-logo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0H3" />
+      </svg>
+      <h1>ERP Automation</h1>
+      <p>Sistema de Gestão de Pedidos</p>
+    </div>
+    <div id="login-error" class="login-error hidden"></div>
+    <div class="form-group">
+      <label for="l-user">Usuário</label>
+      <input type="text" id="l-user" placeholder="admin" autocomplete="username" />
+    </div>
+    <div class="form-group">
+      <label for="l-pass">Senha</label>
+      <input type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password" />
+    </div>
+    <button class="btn btn-primary btn-full" id="login-btn" onclick="Auth.login()">
+      Entrar
+    </button>
+    <p class="login-hint">Credenciais padrão: admin / admin123</p>
+  </div>
+</div>
+
+<!-- ─── App Principal ──────────────────────────────────────────────────────── -->
+<div id="app" class="hidden">
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0H3" />
+      </svg>
+      <div>
+        <span class="brand-title">ERP System</span>
+        <span class="brand-sub">Automation</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item active" data-page="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+        </svg>
+        <span>Dashboard</span>
+      </a>
+
+      <a href="#" class="nav-item" data-page="pedidos">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z" />
+        </svg>
+        <span>Pedidos</span>
+      </a>
+
+      <a href="#" class="nav-item" data-page="novo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+        <span>Novo Pedido</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <span id="api-status" class="api-badge checking">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>
+        </svg>
+        Verificando...
+      </span>
+      <button class="btn-logout" onclick="Auth.logout()" title="Sair">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+        </svg>
+        <span>Sair</span>
+      </button>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="top-bar">
+      <h1 id="page-title">Dashboard</h1>
+      <div class="top-bar-actions">
+        <button class="btn btn-icon" onclick="App.exportarCSV()" title="Exportar CSV">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+          </svg>
+        </button>
+        <button class="btn btn-secondary btn-icon-text" onclick="App.refreshData()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+          </svg>
+          Atualizar
+        </button>
+      </div>
+    </header>
+
+    <div id="toast-container"></div>
+
+    <!-- ── Dashboard ───────────────────────────────────────────── -->
+    <section id="page-dashboard" class="page active">
+      <div class="stats-grid" id="stats-grid">
+        <div class="stat-card skeleton-card"><div class="skeleton" style="height:80px"></div></div>
+        <div class="stat-card skeleton-card"><div class="skeleton" style="height:80px"></div></div>
+        <div class="stat-card skeleton-card"><div class="skeleton" style="height:80px"></div></div>
+        <div class="stat-card skeleton-card"><div class="skeleton" style="height:80px"></div></div>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="card">
+          <div class="card-header"><h2>Pedidos Recentes</h2></div>
+          <div class="card-body" id="recent-pedidos">
+            <div class="skeleton" style="height:68px;margin-bottom:8px"></div>
+            <div class="skeleton" style="height:68px;margin-bottom:8px"></div>
+            <div class="skeleton" style="height:68px"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><h2>Volume (7 dias)</h2></div>
+          <div class="card-body">
+            <div id="chart-container">
+              <div class="skeleton" style="height:140px"></div>
+            </div>
+          </div>
         </div>
       </div>
-      <nav class="sidebar-nav">
-        <a href="#" class="nav-item active" data-page="dashboard">
-          <span class="nav-icon">📊</span> Dashboard
-        </a>
-        <a href="#" class="nav-item" data-page="pedidos">
-          <span class="nav-icon">📋</span> Pedidos
-        </a>
-        <a href="#" class="nav-item" data-page="novo">
-          <span class="nav-icon">➕</span> Novo Pedido
-        </a>
-      </nav>
-      <div class="sidebar-footer">
-        <span id="api-status" class="api-badge checking">🔄 Verificando API...</span>
+    </section>
+
+    <!-- ── Pedidos ─────────────────────────────────────────────── -->
+    <section id="page-pedidos" class="page">
+      <div class="page-toolbar">
+        <div class="filter-group">
+          <label>Status</label>
+          <select id="filter-status" onchange="App.filterPedidos()">
+            <option value="">Todos</option>
+            <option value="pendente">Pendente</option>
+            <option value="em_andamento">Em Andamento</option>
+            <option value="concluido">Concluído</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Cliente</label>
+          <input type="text" id="filter-cliente" placeholder="Buscar..." oninput="App.filterPedidos()" />
+        </div>
       </div>
-    </aside>
+      <div id="pedidos-container">
+        <div class="skeleton" style="height:90px;margin-bottom:10px"></div>
+        <div class="skeleton" style="height:90px;margin-bottom:10px"></div>
+        <div class="skeleton" style="height:90px"></div>
+      </div>
+    </section>
 
-    <!-- ─── Main ─────────────────────────────────────────────────── -->
-    <main class="main-content">
+    <!-- ── Novo Pedido ─────────────────────────────────────────── -->
+    <section id="page-novo" class="page">
+      <div class="novo-pedido-layout">
 
-      <!-- Header -->
-      <header class="top-bar">
-        <h1 id="page-title">Dashboard</h1>
-        <div class="top-bar-actions">
-          <button class="btn btn-secondary" onclick="App.refreshData()">🔄 Atualizar</button>
-        </div>
-      </header>
+        <!-- Coluna principal: formulário -->
+        <div class="novo-pedido-form">
 
-      <!-- Toast container -->
-      <div id="toast-container"></div>
-
-      <!-- ─── PÁGINA: Dashboard ────────────────────────────────── -->
-      <section id="page-dashboard" class="page active">
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-icon pending">📬</div>
-            <div class="stat-body">
-              <span class="stat-value" id="stat-pendente">—</span>
-              <span class="stat-label">Pendentes</span>
+          <!-- Bloco 1: Dados do cliente -->
+          <div class="form-block">
+            <div class="form-block-title">
+              <span class="form-block-num">1</span>
+              Dados do Cliente
             </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon progress">⚡</div>
-            <div class="stat-body">
-              <span class="stat-value" id="stat-andamento">—</span>
-              <span class="stat-label">Em Andamento</span>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon done">✅</div>
-            <div class="stat-body">
-              <span class="stat-value" id="stat-concluido">—</span>
-              <span class="stat-label">Concluídos</span>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon total">📦</div>
-            <div class="stat-body">
-              <span class="stat-value" id="stat-total">—</span>
-              <span class="stat-label">Total</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="card mt-2">
-          <div class="card-header">
-            <h2>Pedidos Recentes</h2>
-          </div>
-          <div class="card-body">
-            <div id="recent-pedidos" class="pedidos-list">
-              <div class="loading-spinner">Carregando...</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ─── PÁGINA: Pedidos ──────────────────────────────────── -->
-      <section id="page-pedidos" class="page">
-        <div class="page-toolbar">
-          <div class="filter-group">
-            <label>Filtrar por status:</label>
-            <select id="filter-status" onchange="App.filterPedidos()">
-              <option value="">Todos</option>
-              <option value="pendente">Pendente</option>
-              <option value="em_andamento">Em Andamento</option>
-              <option value="concluido">Concluído</option>
-              <option value="cancelado">Cancelado</option>
-            </select>
-          </div>
-          <div class="filter-group">
-            <label>Buscar cliente:</label>
-            <input type="text" id="filter-cliente" placeholder="Nome do cliente..." oninput="App.filterPedidos()" />
-          </div>
-        </div>
-        <div id="pedidos-container" class="pedidos-list">
-          <div class="loading-spinner">Carregando...</div>
-        </div>
-      </section>
-
-      <!-- ─── PÁGINA: Novo Pedido ──────────────────────────────── -->
-      <section id="page-novo" class="page">
-        <div class="card form-card">
-          <div class="card-header"><h2>Criar Novo Pedido</h2></div>
-          <div class="card-body">
-            <div class="form-group">
-              <label for="f-cliente">Cliente *</label>
-              <input type="text" id="f-cliente" placeholder="Nome do cliente" />
-            </div>
-            <div class="form-group">
-              <label for="f-descricao">Descrição *</label>
-              <textarea id="f-descricao" rows="4" placeholder="Descreva o pedido..."></textarea>
-            </div>
-            <div class="form-group">
-              <label for="f-prioridade">Prioridade</label>
-              <select id="f-prioridade">
-                <option value="baixa">Baixa</option>
-                <option value="media" selected>Média</option>
-                <option value="alta">Alta</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Itens do Pedido</label>
-              <div id="itens-container">
-                <div class="item-row">
-                  <input type="text" placeholder="Nome do item" class="item-nome" />
-                  <input type="number" placeholder="Qtd" class="item-qtd" min="1" value="1" />
-                  <button class="btn-remove-item" onclick="App.removeItem(this)">✕</button>
+            <div class="form-block-body">
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label for="f-cliente">Nome do cliente *</label>
+                  <input type="text" id="f-cliente"
+                    placeholder="Ex: Empresa XPTO Ltda."
+                    oninput="App.updateSummary()" />
+                  <span class="field-error" id="err-cliente"></span>
+                </div>
+                <div class="form-group">
+                  <label for="f-prioridade">Prioridade</label>
+                  <select id="f-prioridade" onchange="App.updateSummary()">
+                    <option value="baixa">🟢 Baixa</option>
+                    <option value="media" selected>🟡 Média</option>
+                    <option value="alta">🔴 Alta</option>
+                  </select>
                 </div>
               </div>
-              <button class="btn btn-ghost mt-1" onclick="App.addItem()">+ Adicionar item</button>
-            </div>
-            <div class="form-actions">
-              <button class="btn btn-secondary" onclick="App.navigate('pedidos')">Cancelar</button>
-              <button class="btn btn-primary" onclick="App.criarPedido()">Criar Pedido</button>
+              <div class="form-group">
+                <label for="f-descricao">Descrição do pedido *</label>
+                <textarea id="f-descricao" rows="3"
+                  placeholder="Descreva o que está sendo solicitado, contexto, requisitos..."
+                  oninput="App.updateSummary()"></textarea>
+                <span class="field-error" id="err-descricao"></span>
+              </div>
+              <div class="form-group">
+                <label for="f-obs">Observações <span class="label-opt">opcional</span></label>
+                <input type="text" id="f-obs"
+                  placeholder="Ex: Entregar até sexta-feira, atenção especial ao embalamento..." />
+              </div>
             </div>
           </div>
-        </div>
-      </section>
 
-      <!-- ─── MODAL: Detalhes / Edição ─────────────────────────── -->
-      <div id="modal-overlay" class="modal-overlay hidden" onclick="App.closeModal(event)">
-        <div class="modal" onclick="event.stopPropagation()">
-          <button class="modal-close" onclick="App.closeModal()">✕</button>
-          <div id="modal-content"></div>
+          <!-- Bloco 2: Itens -->
+          <div class="form-block">
+            <div class="form-block-title">
+              <span class="form-block-num">2</span>
+              Itens do Pedido
+              <span class="form-block-count" id="itens-count">0 item</span>
+            </div>
+            <div class="form-block-body">
+              <div id="itens-container"></div>
+              <button class="btn-add-item" onclick="App.addItem()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+                </svg>
+                Adicionar item
+              </button>
+            </div>
+          </div>
+
+          <!-- Ações -->
+          <div class="form-footer">
+            <button class="btn btn-secondary" onclick="App.navigate('pedidos')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3"/>
+              </svg>
+              Cancelar
+            </button>
+            <button class="btn btn-primary" id="btn-criar" onclick="App.criarPedido()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+              </svg>
+              Criar Pedido
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Coluna lateral: resumo ao vivo -->
+        <aside class="novo-pedido-summary">
+          <div class="summary-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/>
+            </svg>
+            Resumo do Pedido
+          </div>
+
+          <div class="summary-body">
+            <div class="summary-field">
+              <span class="summary-label">Cliente</span>
+              <span class="summary-value" id="sum-cliente">—</span>
+            </div>
+            <div class="summary-field">
+              <span class="summary-label">Prioridade</span>
+              <span class="summary-value" id="sum-prioridade">
+                <span class="prio-badge prio-media">Média</span>
+              </span>
+            </div>
+            <div class="summary-field">
+              <span class="summary-label">Descrição</span>
+              <span class="summary-value summary-desc" id="sum-descricao">—</span>
+            </div>
+
+            <div class="summary-divider"></div>
+
+            <div class="summary-field">
+              <span class="summary-label">Itens</span>
+              <span class="summary-value" id="sum-itens-count">0 item</span>
+            </div>
+
+            <div id="sum-itens-list" class="summary-itens"></div>
+
+            <div class="summary-divider"></div>
+
+            <div class="summary-status">
+              <div class="status-badge status-pending" style="width:100%;justify-content:center;padding:6px 0;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Será criado como Pendente
+              </div>
+            </div>
+          </div>
+
+          <div class="summary-tip">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/>
+            </svg>
+            O resumo atualiza em tempo real conforme você preenche o formulário.
+          </div>
+        </aside>
+
+      </div>
+    </section>
+
+    <!-- ── Modal ───────────────────────────────────────────────── -->
+    <div id="modal-overlay" class="modal-overlay hidden" onclick="App.closeModal(event)">
+      <div class="modal" onclick="event.stopPropagation()">
+        <button class="modal-close" onclick="App.closeModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        <div id="modal-content"></div>
+      </div>
+    </div>
+
+    <!-- ── Dialog de Confirmação ───────────────────────────────── -->
+    <div id="confirm-overlay" class="modal-overlay hidden">
+      <div class="confirm-dialog">
+        <div id="confirm-icon" class="confirm-icon"></div>
+        <h3 id="confirm-title"></h3>
+        <p id="confirm-message"></p>
+        <div class="confirm-actions">
+          <button class="btn btn-secondary" onclick="App.confirmCancel()">Cancelar</button>
+          <button class="btn btn-danger" id="confirm-ok" onclick="App.confirmOk()">Confirmar</button>
         </div>
       </div>
+    </div>
 
-    </main>
-  </div>
+  </main>
+</div>
 
-  <script src="app.js"></script>
+<script src="app.js"></script>
 </body>
 </html>

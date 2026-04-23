@@ -1,17 +1,15 @@
 {
   "name": "erp-automation-system-backend",
-  "version": "1.0.0",
-  "description": "ERP Automation System — Backend Node.js puro",
+  "version": "2.0.0",
+  "description": "ERP Automation System — Backend Node.js puro, arquitetura em camadas",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js",
-    "test": "node test/api.test.js"
+    "dev": "node --watch server.js"
   },
   "engines": {
     "node": ">=18.0.0"
   },
-  "keywords": ["erp", "automation", "nodejs"],
-  "author": "",
+  "keywords": ["erp", "automation", "nodejs", "portfolio"],
   "license": "MIT"
 }
