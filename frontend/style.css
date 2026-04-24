@@ -354,7 +354,8 @@ body {
 }
 
 /* ── Formulários ────────────────────────────────────────────────────────── */
-.form-card { /* max-width removido — layout de 2 colunas controla o espaço */  
+.form-card {
+  /* max-width removido — layout de 2 colunas controla o espaço */
   background: var(--bg2);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -476,7 +477,7 @@ textarea { resize: vertical; min-height: 80px; }
 .btn-sm       { padding: 5px 11px; font-size: .78rem; }
 .btn-full     { width: 100%; justify-content: center; padding: 10px; }
 .btn-icon     { padding: 8px; }
-.btn-icon-text { gap: 4px; padding: 8px 12px; }
+.btn-icon-text { gap: 4px; padding: 8px 12px;}
 
 .btn-primary   { background: var(--accent);    color: #fff; }
 .btn-secondary { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
@@ -985,7 +986,7 @@ textarea { resize: vertical; min-height: 80px; }
 }
 
 /* Mobile: sidebar colapsa, layouts em coluna única */
-@media (max-width: 640px) {
+@media (max-width: 580px) {
   .sidebar             { width: 56px; min-width: 56px; }
   .sidebar-brand > div,
   .nav-item span,
@@ -1002,5 +1003,3 @@ textarea { resize: vertical; min-height: 80px; }
   .summary-body        { display: flex; flex-direction: column; }
   .stats-grid          { grid-template-columns: repeat(2, 1fr); }
 }
-
-

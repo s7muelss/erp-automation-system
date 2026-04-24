@@ -1,0 +1,16 @@
+{
+  "name": "sqlite-basico-exemplo",
+  "version": "1.0.0",
+  "description": "Exemplo didático de SQLite com Node.js puro",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "limpar": "rm -f erp.db"
+  },
+  "dependencies": {
+    "better-sqlite3": "^9.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
