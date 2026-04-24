@@ -830,10 +830,10 @@ const App = {
       const url  = URL.createObjectURL(blob);
       const a    = document.createElement("a");
       a.href     = url;
-      a.download = `pedidos-${new Date().toISOString().slice(0,10)}.csv`;
+      a.download = `pedidos-${new Date().toISOString().slice(0,10)}.xlsx`;
       a.click();
       URL.revokeObjectURL(url);
-      toast("CSV exportado com sucesso!", "success");
+      toast("Excel exportado com sucesso!", "success");
     } catch (err) {
       toast(err.message, "error");
     }
@@ -891,4 +891,3 @@ document.addEventListener("DOMContentLoaded", () => {
     Auth.showLogin();
   }
 });
-
